@@ -1,6 +1,6 @@
 classdef LinearFitter
     %   LinearFit: class to solve linear fit problems
-    %   Fill the properties of the class then call fit() to fir your data
+    %   Fill the properties of the class then call fit() to fit your data
     %   agains a linear function
 
     properties
