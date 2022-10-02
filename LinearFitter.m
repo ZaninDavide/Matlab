@@ -16,9 +16,12 @@ classdef LinearFitter
         labelx(1, 1) string = "X axes"
         labely(1, 1) string = "Y axes"
         filename(1, 1) string = ""
-        box(1, 4) double = [0.55, 0.50, 0.1, 0.1] % [x, y, w, h]
+        box(1, 4) double = [0.57, 0.57, 0.1, 0.1] % [x, y, w, h]
         cifrea(1, 1) uint8 = 5
         cifreb(1, 1) uint8 = 5
+        pedice(1, 1) char = ' '
+        showzoom(1, 1) logical = false
+        zoompos(1, 4) double = [0.21, 0.75, 0.15, 0.15] % [x, y, w, h]
     end
 
     methods
@@ -36,9 +39,12 @@ classdef LinearFitter
             self.labelx = "Asse X";
             self.labely = "Asse Y";
             self.filename = "";
-            self.box = [0.55, 0.50, 0.1, 0.1];
+            self.box = [0.57, 0.57, 0.1, 0.1];
             self.cifrea = 5;
             self.cifreb = 5;
+            self.pedice = ' ';
+            self.showzoom = false;
+            self.zoompos = [0.21, 0.75, 0.15, 0.15];
         end
 
 
@@ -162,7 +168,16 @@ classdef LinearFitter
             % textbox
             ta = numberToText(a, sa, self.cifrea);
             tb = numberToText(b, sb, self.cifreb);
-            text = ["\alpha = " + ta + self.unity; "\beta = " + tb + self.unity + "/" + self.unitx];
+            pd = "";
+            if(self.pedice ~= ' ')
+                text = [ ...
+                        "\alpha_{" + self.pedice + "} = " + ta + self.unity; ...
+                        "\beta_{" + self.pedice + "} = " + tb + self.unity + "/" + self.unitx; ...
+                        "\chi^2_{" + self.pedice + "} = " + res_chi2_str ...
+                    ];
+            else
+                text = ["\alpha = " + ta + self.unity; "\beta = " + tb + self.unity + "/" + self.unitx; "\chi^2 = " + res_chi2_str];
+            end
             annotation("textbox", self.box, ...
                 "BackgroundColor", [1,1,1], ...
                 "FontSize", 14, ...
@@ -190,6 +205,21 @@ classdef LinearFitter
             
             title("Residui da modello lineare");
             
+            if(self.showzoom)
+                hold on;
+                id = round(length(self.datax) / 2)
+                x = self.datax(id);
+                y = self.datay(id);
+                axes("Position",self.zoompos);
+                errorbar(x,y,-self.sigmay(id),self.sigmay(id),-self.sigmax(id),self.sigmax(id),'o');
+                xlim([(x-self.sigmax(id)*1.5) (x+self.sigmax(id)*1.5)]);
+                ylim([(y-self.sigmay(id)*1.5) (y+self.sigmay(id)*1.5)]);
+                % xlabel(self.labelx);
+                % ylabel(self.labely);
+                grid on;
+                grid minor;
+
+            end    
             % Export
             if(strlength(self.filename) > 0)
                 exportFigure(gcf, gca, self.filename);
