@@ -22,6 +22,8 @@ classdef LinearFitter
         pedice(1, 1) char = ' '
         showzoom(1, 1) logical = false
         zoompos(1, 4) double = [0.21, 0.75, 0.15, 0.15] % [x, y, w, h]
+        fontsize(1, 1) double = 14
+        ratio(1, 1) double = 4/3
     end
 
     methods
@@ -45,6 +47,8 @@ classdef LinearFitter
             self.pedice = ' ';
             self.showzoom = false;
             self.zoompos = [0.21, 0.75, 0.15, 0.15];
+            self.fontsize = 14;
+            self.ratio = 4/3;
         end
 
 
@@ -149,7 +153,10 @@ classdef LinearFitter
             axes();
             
             h = 3;
-            tiledlayout(h,1);
+            tl = tiledlayout(h,1);
+            tl.TileSpacing = 'tight';
+            tl.Padding = 'tight';
+            
             nexttile(1, [h-1, 1]);
             delta_x = max(self.datax) - min(self.datax);
             xlim([min(self.datax)-0.1*delta_x max(self.datax)+0.1*delta_x]);
@@ -162,7 +169,7 @@ classdef LinearFitter
             scatter(self.datax, self.datay, "MarkerEdgeColor",[0.00 0.45 0.74]);
             
             title(self.name);
-            xlabel(self.labelx);
+            set(gca, 'XTickLabel', []);
             ylabel(self.labely);
         
             % textbox
@@ -180,12 +187,12 @@ classdef LinearFitter
             end
             annotation("textbox", self.box, ...
                 "BackgroundColor", [1,1,1], ...
-                "FontSize", 14, ...
+                "FontSize", self.fontsize, ...
                 "String", text, ...
                 'FitBoxToText', 'on' ...
             );
         
-            set(gca, "FontSize", 14);
+            set(gca, "FontSize", self.fontsize);
          
             
             % grafico degli scarti
@@ -203,7 +210,9 @@ classdef LinearFitter
             hold on;
             scatter(self.datax, scarto_y, "MarkerEdgeColor",[0.00 0.45 0.74]);
             
-            title("Residui da modello lineare");
+            % title("Residui da modello lineare", "FontSize", self.fontsize);
+            ylabel("Residui [" + self.unity + "]");
+            xlabel(self.labelx);
             
             if(self.showzoom)
                 hold on;
@@ -222,7 +231,7 @@ classdef LinearFitter
             end    
             % Export
             if(strlength(self.filename) > 0)
-                exportFigure(gcf, gca, self.filename);
+                exportFigure(gcf, gca, self.filename, self.fontsize, self.ratio);
             end
         end
     end
