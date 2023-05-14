@@ -17,8 +17,8 @@ classdef LinearFitter
         labely(1, 1) string = "Y axes"
         filename(1, 1) string = ""
         box(1, 4) double = [0.57, 0.57, 0.1, 0.1] % [x, y, w, h]
-        cifrea(1, 1) uint8 = 5
-        cifreb(1, 1) uint8 = 5
+        cifrea(1, 1) uint8 = 0
+        cifreb(1, 1) uint8 = 0
         pedice(1, 1) char = ' '
         showzoom(1, 1) logical = false
         zoompos(1, 4) double = [0.21, 0.75, 0.15, 0.15] % [x, y, w, h]
@@ -56,14 +56,21 @@ classdef LinearFitter
         function [res_a, res_b, res_sa, res_sb, res_chi2, res_chi2_str] = fit(self)        
             % safety checks
             if ( ...
-                length(self.datax) ~= length(self.datay) || ...
-                length(self.datax) ~= length(self.sigmay) || ...
-                length(self.datax) ~= length(self.sigmax) ...
+                length(datax) ~= length(datay) || ...
+                length(datax) ~= length(sigmay) || ...
+                length(datax) ~= length(sigmax) || ...
+                min(size(datax) ~= size(datay)) || ...
+                min(size(datax) ~= size(sigmay)) || ...
+                min(size(datax) ~= size(sigmax')) ...
             ) 
-                throw("self.datax, self.datay, self.sigmax and self.sigmay should have the same length");
+                disp("size(datax)  = "); disp(size(datax));
+                disp("size(datay)  = "); disp(size(datay));
+                disp("size(sigmax) = "); disp(size(sigmax));
+                disp("size(sigmay) = "); disp(size(sigmay));
+                assert(false, "datax, datay, sigmax and sigmay should have the same size");
             end
-            if(isempty(self.datax))
-                throw("Missing data.");
+            if(isempty(datax))
+                assert(false, "Missing data.");
             end
         
             old_b = 9999999;
