@@ -235,7 +235,7 @@ classdef LinearFitter
             end    
             % Export
             if(strlength(self.filename) > 0)
-                exportFigure(gcf, gca, self.filename, self.fontsize, self.ratio);
+                exportFigure(self.filename, gcf, self.fontsize, self.ratio);
             end
         end
     end
