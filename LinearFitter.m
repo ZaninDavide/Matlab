@@ -1,7 +1,7 @@
 classdef LinearFitter
     %   LinearFit: class to solve linear fit problems
     %   Fill the properties of the class then call fit() to fit your data
-    %   agains a linear function
+    %   against a linear model
 
     properties
         datax(:, 1) double {mustBeReal, mustBeFinite} = []
@@ -10,13 +10,15 @@ classdef LinearFitter
         sigmay(:, 1) double {mustBeReal, mustBeFinite} = []
         unitx(1, 1) string = "ux"
         unity(1, 1) string = "uy"
+        unita(1, 1) string = ""
+        unitb(1, 1) string = ""
         nolog(1, :) logical = false
         verbose(1, :) logical = false
         name(1, 1) string = "Linear model"
         labelx(1, 1) string = "X axes"
         labely(1, 1) string = "Y axes"
         filename(1, 1) string = ""
-        box(1, 4) double = [0.57, 0.57, 0.1, 0.1] % [x, y, w, h]
+        box string = ""
         cifrea(1, 1) uint8 = 0
         cifreb(1, 1) uint8 = 0
         pedice(1, 1) char = ' '
@@ -41,9 +43,9 @@ classdef LinearFitter
             self.labelx = "Asse X";
             self.labely = "Asse Y";
             self.filename = "";
-            self.box = [0.57, 0.57, 0.1, 0.1];
-            self.cifrea = 5;
-            self.cifreb = 5;
+            self.box = "";
+            self.cifrea = 0;
+            self.cifreb = 0;
             self.pedice = ' ';
             self.showzoom = false;
             self.zoompos = [0.21, 0.75, 0.15, 0.15];
@@ -137,7 +139,13 @@ classdef LinearFitter
             res_sa = sigma_a;
             res_sb = sigma_b;
             res_chi2 = chi_quadro / (length(self.datax) - 2);
-            res_chi2_str = round(chi_quadro) + "/" + (length(self.datax) - 2);
+            res_chi2_str = "";
+            if round(chi_quadro) ~= 0
+                res_chi2_str = round(chi_quadro) + "/" + (length(self.datax) - 2);
+            else
+                factor_chi2 = 10^(floor(log10(chi_quadro)));
+                res_chi2_str = (round(chi_quadro / factor_chi2) * factor_chi2) + "/" + (length(self.datax) - 2);
+            end
         end
 
         % FIT AND PLOT
@@ -167,6 +175,7 @@ classdef LinearFitter
             x2 = [min(self.datax)-0.1*delta_x max(self.datax)+0.1*delta_x];
             y2 = b*x2 + a;
             line(x2,y2,'Color','red','LineStyle','-')
+            box on;
             grid on;
             grid minor;
             hold on;
@@ -174,27 +183,38 @@ classdef LinearFitter
             
             title(self.name);
             set(gca, 'XTickLabel', []);
-            ylabel(self.labely);
+            if self.unity == "" || self.unity == "1"
+                ylabel(self.labely);
+            else
+                ylabel(self.labely + " [" + self.unity + "]");
+            end
         
             % textbox
             ta = numberToText(a, sa, self.cifrea);
             tb = numberToText(b, sb, self.cifreb);
             pd = "";
-            if(self.pedice ~= ' ')
+            unit_alpha = self.unita;
+            unit_beta = self.unitb;
+            if self.unita == ""
+                unit_alpha = self.unity;
+            end
+            if self.unitb == ""
+                if self.unitx == "" || self.unitx == "1"
+                    unit_beta = self.unity;
+                else
+                    unit_beta = self.unity + "/" + self.unitx;
+                end
+            end
+            if self.pedice ~= ' '
                 text = [ ...
-                        "\alpha_{" + self.pedice + "} = " + ta + self.unity; ...
-                        "\beta_{" + self.pedice + "} = " + tb + self.unity + "/" + self.unitx; ...
+                        "\alpha_{" + self.pedice + "} = " + ta + unit_alpha; ...
+                        "\beta_{" + self.pedice + "} = " + tb + unit_beta; ...
                         "\chi^2_{" + self.pedice + "} = " + res_chi2_str ...
                     ];
             else
-                text = ["\alpha = " + ta + self.unity; "\beta = " + tb + self.unity + "/" + self.unitx; "\chi^2 = " + res_chi2_str];
+                text = ["\alpha = " + ta + unit_alpha; "\beta = " + tb + unit_beta; "\chi^2 = " + res_chi2_str];
             end
-            annotation("textbox", self.box, ...
-                "BackgroundColor", [1,1,1], ...
-                "FontSize", self.fontsize, ...
-                "String", text, ...
-                'FitBoxToText', 'on' ...
-            );
+            top_axes = gca;
         
             set(gca, "FontSize", self.fontsize);
          
@@ -210,13 +230,22 @@ classdef LinearFitter
             y = [0 0];
             line(x,y,'Color','red','LineStyle','-')
             grid on;
+            box on;
             grid minor;
             hold on;
             scatter(self.datax, scarto_y, "MarkerEdgeColor",[0.00 0.45 0.74]);
+            set(gca, "FontSize", self.fontsize);
             
-            % title("Residui da modello lineare", "FontSize", self.fontsize);
-            ylabel("Residui [" + self.unity + "]");
-            xlabel(self.labelx);
+            if self.unity == "" || self.unity == "1"
+                ylabel("Residui");
+            else
+                ylabel("Residui [" + self.unity + "]");
+            end
+            if self.unitx == "" || self.unitx == "1"
+                xlabel(self.labelx);
+            else
+                xlabel(self.labelx + " [" + self.unitx + "]");
+            end
             
             if(self.showzoom)
                 hold on;
@@ -233,6 +262,17 @@ classdef LinearFitter
                 grid minor;
 
             end    
+
+            if self.box == ""
+                if b > 0 
+                    textBox(text, "southeast", top_axes, self.fontsize, 0.01, 0.01 * self.ratio);
+                else
+                    textBox(text, "northeast", top_axes, self.fontsize, 0.01, 0.01 * self.ratio);
+                end
+            else
+                textBox(text, self.box, top_axes, self.fontsize, 0.01, 0.01 * self.ratio);
+            end
+            
             % Export
             if(strlength(self.filename) > 0)
                 exportFigure(self.filename, gcf, self.fontsize, self.ratio);
